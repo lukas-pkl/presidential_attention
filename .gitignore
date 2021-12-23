@@ -1,2 +1,3 @@
 0_data_collection/constants.py
 1_data_enrichement/constants.py
+2_analysis/constants.py
