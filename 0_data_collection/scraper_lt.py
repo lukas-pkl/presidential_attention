@@ -8,20 +8,21 @@ Created: 2021 12 22
 Author: lukasp
 """
 
-#Standard library
-import requests 
+# Standard library
+import requests
 from datetime import datetime
 from tqdm import tqdm
-import random 
+import random
 import time
 
-#Pypi libraries
+# Pypi libraries
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 
-#Local
+# Local
 import constants
 from utils import get_date, get_links, get_text, clean_link
+
 
 def add_to_visited(link):
     last_char = link[-1]
@@ -45,12 +46,13 @@ def add_to_visited(link):
         visited_8.add(link)
     elif last_char == "9":
         visited_9.add(link)
-    else :
+    else:
         visited_oth.add(link)
-             
+
+
 def check_visited(link):
     last_char = link[-1]
-    
+
     if last_char == "0":
         return link in visited_0
     elif last_char == "1":
@@ -74,6 +76,7 @@ def check_visited(link):
     else:
         return link in visited_oth
 
+
 visited_0 = set()
 visited_1 = set()
 visited_2 = set()
@@ -95,14 +98,14 @@ print(datetime.now())
 print()
 
 query = {}
-projection = {"_id" : 0, "source":1}
+projection = {"_id": 0, "source": 1}
 
 for i in tqdm(mongo_col.find(query, projection)):
     add_to_visited(i["source"])
 
 # Step 2: Scrape first 200 index pages to get new links
 
-#2.1 Initial page
+# 2.1 Initial page
 print("Collecting links")
 print(datetime.now())
 print()
@@ -111,7 +114,7 @@ links = set()
 
 res = requests.get(constants.lt_core_link)
 add_to_visited(constants.lt_core_link)
-if res.status_code == 200 :
+if res.status_code == 200:
     soup = BeautifulSoup(res.text, "html5lib")
     site_links = get_links(soup)
     for link in site_links:
@@ -125,8 +128,8 @@ else:
 pages = [i for i in range(2, 200)]
 
 for i in tqdm(pages):
-    res = requests.get(constants.lt_core_link_ext+str(i))
-    if res.status_code == 200 :
+    res = requests.get(constants.lt_core_link_ext + str(i))
+    if res.status_code == 200:
         soup = BeautifulSoup(res.text, "html5lib")
         site_links = get_links(soup)
         for link in site_links:
@@ -134,7 +137,9 @@ for i in tqdm(pages):
                 links.add(link)
     else:
         pass
-    sleep_interval = random.randint(100,300)/100 #Sleep a random interval between 1 and 3 s
+    sleep_interval = (
+        random.randint(100, 300) / 100
+    )  # Sleep a random interval between 1 and 3 s
     time.sleep(sleep_interval)
 
 print(f"Collected {len(links)} links")
@@ -149,24 +154,22 @@ print()
 counter = 0
 faulty_links = []
 print(datetime.now(), " Started")
-while True :
+while True:
     if len(links) > 0:
         current_link = links.pop()
         add_to_visited(current_link)
         try:
             res = requests.get(current_link)
-            if res.status_code == 200 :
+            if res.status_code == 200:
                 try:
                     soup = BeautifulSoup(res.text, "html5lib")
                     date = get_date(soup)
                     site_links = get_links(soup)
                     text = get_text(soup)
 
-                    doc = {"source" : current_link, 
-                           "text": text, 
-                           "date": date }
+                    doc = {"source": current_link, "text": text, "date": date}
                     mongo_col.insert_one(doc)
-                    counter +=1 
+                    counter += 1
 
                     if counter % 1000 == 0:
                         print(datetime.now(), " Counter at ", counter)
@@ -176,11 +179,11 @@ while True :
                             links.add(link)
 
                 except Exception as e:
-                    print(datetime.now(), current_link, e)   
+                    print(datetime.now(), current_link, e)
                     faulty_links.append(current_link)
         except Exception as e:
             print(datetime.now(), " Faulty link ", current_link)
-        
+
         pass
     else:
         if len(faulty_links) > 0:
