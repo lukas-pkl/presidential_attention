@@ -76,7 +76,7 @@ def prime_and_prez(cabinet: list):
 
 class LTDoc(BaseModel):
 
-    para_id:str=""
+    para_id: str = ""
     text: str = ""
     source: str = ""
     cabinet_ents: list = []

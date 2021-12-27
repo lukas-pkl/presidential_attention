@@ -15,18 +15,19 @@ from tqdm import tqdm
 import spacy
 import pickle
 
-import utils 
+import utils
 import constants
 
 # Load auxiliary file with cabinet member names
 with open("./Cabinet_data_NER.pkl", "rb") as file:
     dfl = pickle.load(file)
 
-#mongo = MongoClient(constants.mongo_conn_string)
-#mongo_lt_source_col = mongo[constants.mongo_db][constants.mongo_lt_col]
-#mongo_lt_destination_col = mongo[constants.mongo_db][constants.mongo_lt_annotated_col]
+# mongo = MongoClient(constants.mongo_conn_string)
+# mongo_lt_source_col = mongo[constants.mongo_db][constants.mongo_lt_col]
+# mongo_lt_destination_col = mongo[constants.mongo_db][constants.mongo_lt_annotated_col]
 
 nlp = spacy.load("lt_core_news_lg")
+
 
 class LTAnnotator:
     """
@@ -34,8 +35,8 @@ class LTAnnotator:
     """
 
     def __init__(self):
-        #self. mongo_source = mongo_lt_source_col
-        #self.mongo_destination = mongo_lt_destination_col
+        # self. mongo_source = mongo_lt_source_col
+        # self.mongo_destination = mongo_lt_destination_col
         self.nlp = nlp
         self.cabinet_data = dfl
 
@@ -54,25 +55,33 @@ class LTAnnotator:
             doc = self.nlp(row["text"])
             entities = [i.text for i in doc.ents]
             cab_ents = utils.cabinet_entities(row["date"], entities, self.cabinet_data)
-            if cab_ents != [] :
+            if cab_ents != []:
                 for i in cab_ents:
-                    d = {"para_id": str(row["_id"]), 
-                        "date": row["date"], 
-                        "text":row["text"],
-                        "source": row["source"]}
+                    d = {
+                        "para_id": str(row["_id"]),
+                        "date": row["date"],
+                        "text": row["text"],
+                        "source": row["source"],
+                    }
                     d.update(i)
                     annotated_raw.append(d)
 
         df_ent = pd.DataFrame(annotated_raw)
 
-        plh = df_ent.groupby(["para_id"]).agg({'cabinet_ents':lambda x: list(x), "date":"first", "text":"first", "source":"first"})
+        plh = df_ent.groupby(["para_id"]).agg(
+            {
+                "cabinet_ents": lambda x: list(x),
+                "date": "first",
+                "text": "first",
+                "source": "first",
+            }
+        )
         df_ent_g = pd.DataFrame()
         df_ent_g["para_id"] = list(plh.index)
         df_ent_g["cabinet_ents"] = list(plh["cabinet_ents"])
         df_ent_g["date"] = list(plh["date"])
         df_ent_g["source"] = list(plh["source"])
         df_ent_g["text"] = list(plh["text"])
-
 
         return df_ent_g
 
@@ -87,11 +96,11 @@ class LTAnnotator:
             interim_data:DataFrame
         """
 
-        interim_data["year"] = interim_data.apply(lambda x : x["date"].year, axis = 1)
-        interim_data["month"] = interim_data.apply(lambda x : x["date"].month, axis = 1)
-        interim_data["day"] = interim_data.apply(lambda x : x["date"].day, axis = 1)
+        interim_data["year"] = interim_data.apply(lambda x: x["date"].year, axis=1)
+        interim_data["month"] = interim_data.apply(lambda x: x["date"].month, axis=1)
+        interim_data["day"] = interim_data.apply(lambda x: x["date"].day, axis=1)
         interim_data = interim_data.sort_values(by=["date"])
-        
+
         return interim_data
 
     def extend_data_cabinet_vars(self, interim_data):
