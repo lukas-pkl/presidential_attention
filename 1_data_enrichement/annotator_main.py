@@ -9,6 +9,7 @@ Author: lukasp
 """
 
 from datetime import datetime
+import time
 
 from pymongo import MongoClient
 
@@ -18,6 +19,8 @@ from utils import LTDoc
 
 mongo = MongoClient(constants.mongo_conn_string)
 mongo_lt_source_col = mongo[constants.mongo_db][constants.mongo_lt_col]
+mongo_lt_destination_col = mongo[constants.mongo_db][constants.mongo_lt_annotated_col]
+mongo_lt_destination_col.drop()
 mongo_lt_destination_col = mongo[constants.mongo_db][constants.mongo_lt_annotated_col]
 
 anno = LTAnnotator()
@@ -30,7 +33,7 @@ years = [i for i in range(begin, end)]
 for y in years:
     print(y)
     query = {"date": {"$gte": datetime(y, 1, 1), "$lt": datetime(y + 1, 1, 1)}}
-    cursor = mongo_lt_source_col.find(query)
+    cursor = mongo_lt_source_col.find(query, no_cursor_timeout=True)
     input_data = [i for i in cursor]
     print(f"Records for this year {len(input_data)}")
     if len(input_data) > 0:
@@ -45,3 +48,4 @@ for y in years:
         validated_data2 = [i.dict() for i in validated_data]
 
         mongo_lt_destination_col.insert_many(validated_data2)
+    time.sleep(60)
