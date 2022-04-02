@@ -87,3 +87,17 @@ class LTDoc(BaseModel):
     cabinet: str = ""
     cabinet_no: str = ""
     president: str = ""
+        
+class LVDoc(BaseModel):
+
+    para_id: str = ""
+    text: str = ""
+    source: str = ""
+    cabinet_ents: list = []
+    date: datetime = datetime(1990, 3, 11)
+    year: int = 1990
+    month: int = 0
+    day: int = 0
+    cabinet: str = ""
+    cabinet_no: str = ""
+    president: str = ""
