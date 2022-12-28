@@ -125,7 +125,7 @@ else:
 
 # 2.2 Numbered pages 2-200
 
-pages = [i for i in range(2, 200)]
+pages = [i for i in range(2, 500)]
 
 for i in tqdm(pages):
     res = requests.get(constants.lt_core_link_ext + str(i))

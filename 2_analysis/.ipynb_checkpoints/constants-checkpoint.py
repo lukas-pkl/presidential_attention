@@ -14,5 +14,5 @@ mongo_lt_col = "lt_news"
 mongo_lt_annotated_col = "annotated"
 
 
-mongo_lt_col = "lv_news"
+mongo_lv_col = "lv_news"
 mongo_lv_annotated_col = "lv_news_annotated"
